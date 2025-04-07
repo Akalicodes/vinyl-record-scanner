@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vinyl Record Scanner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+        }
+        .loading-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+        }
+        .loading-spinner {
+            width: 100px;
+            height: 100px;
+            animation: spin 2s linear infinite;
+            margin: 20px auto;
+            background-image: url("{{ url_for('static', filename='record.jpg') }}");
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Vinyl Record Scanner</h1>
+            <p>Take a photo of any vinyl record cover to identify it</p>
+        </header>
+
+        <main>
+            <div class="upload-section">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="upload-box" id="dropZone">
+                        <input type="file" id="photoInput" accept="image/*" capture="environment">
+                        <label for="photoInput">
+                            <div class="upload-content">
+                                <span class="upload-text">TAKE PHOTO</span>
+                                <span class="upload-subtext">or upload an image</span>
+                            </div>
+                        </label>
+                    </div>
+                </form>
+            </div>
+
+            <div class="result-section" id="resultSection" style="display: none;">
+                <h2>Latest Scan</h2>
+                <div class="result-card">
+                    <div id="resultText"></div>
+                </div>
+            </div>
+
+            <div class="history-section">
+                <h2>Scan History</h2>
+                <div id="historyList"></div>
+            </div>
+
+            <div class="loading">
+                <div class="loading-content">
+                    <div class="loading-spinner"></div>
+                    <h2>Analyzing album cover...</h2>
+                    <p>Please wait while we identify the album and artist</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.getElementById('photoInput').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('photo', file);
+
+            // Show loading screen
+            document.querySelector('.loading').style.display = 'block';
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                // Hide loading screen
+                document.querySelector('.loading').style.display = 'none';
+
+                if (data.success) {
+                    document.getElementById('resultSection').style.display = 'block';
+                    
+                    // Parse the response to extract album and artist
+                    const info = data.info;
+                    const albumMatch = info.match(/Album: (.*?)(?=Artist:|$)/);
+                    const artistMatch = info.match(/Artist: (.*?)$/);
+                    
+                    const album = albumMatch ? albumMatch[1].trim() : 'Unknown Album';
+                    const artist = artistMatch ? artistMatch[1].trim() : 'Unknown Artist';
+                    
+                    document.getElementById('resultText').innerHTML = `
+                        <div class="simple-info">
+                            <div class="info-line"><strong>Album:</strong> ${album}</div>
+                            <div class="info-line"><strong>Artist:</strong> ${artist}</div>
+                        </div>
+                    `;
+                    loadHistory();
+                } else {
+                    document.getElementById('resultSection').style.display = 'block';
+                    document.getElementById('resultText').innerHTML = `
+                        <div class="simple-info error-message">
+                            <div class="info-line">${data.info}</div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                // Hide loading screen
+                document.querySelector('.loading').style.display = 'none';
+                console.error('Error uploading photo: ', error);
+                alert('An error occurred while uploading the photo');
+            }
+        });
+
+        async function loadHistory() {
+            try {
+                const response = await fetch('/records');
+                const records = await response.json();
+                
+                const historyList = document.getElementById('historyList');
+                historyList.innerHTML = records.reverse().map(record => {
+                    const info = record.info;
+                    const albumMatch = info.match(/Album: (.*?)(?=Artist:|$)/);
+                    const artistMatch = info.match(/Artist: (.*?)$/);
+                    
+                    const album = albumMatch ? albumMatch[1].trim() : 'Unknown Album';
+                    const artist = artistMatch ? artistMatch[1].trim() : 'Unknown Artist';
+                    
+                    return `
+                        <div class="history-card">
+                            <div class="simple-info">
+                                <div class="info-line"><strong>Album:</strong> ${album}</div>
+                                <div class="info-line"><strong>Artist:</strong> ${artist}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Error loading history:', error);
+            }
+        }
+
+        // Load history on page load
+        loadHistory();
+    </script>
+</body>
+</html> 
