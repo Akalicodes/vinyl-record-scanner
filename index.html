@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vinyl Record Scanner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="static/style.css">
+    <style>
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+        }
+        .loading-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+        }
+        .loading-spinner {
+            width: 100px;
+            height: 100px;
+            animation: spin 2s linear infinite;
+            margin: 20px auto;
+            background-image: url("static/record.jpg");
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Vinyl Record Scanner</h1>
+            <p>Take a photo of any vinyl record cover to identify it</p>
+        </header>
+
+        <main>
+            <div class="upload-section">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="upload-box" id="dropZone">
+                        <input type="file" id="photoInput" accept="image/*" capture="environment">
+                        <label for="photoInput">
+                            <div class="upload-content">
+                                <span class="upload-text">TAKE PHOTO</span>
+                                <span class="upload-subtext">or upload an image</span>
+                            </div>
+                        </label>
+                    </div>
+                </form>
+            </div>
+
+            <div class="result-section" id="resultSection" style="display: none;">
+                <h2>Latest Scan</h2>
+                <div class="result-card">
+                    <div id="resultText"></div>
+                </div>
+            </div>
+
+            <div class="history-section">
+                <h2>Scan History</h2>
+                <div id="historyList"></div>
+            </div>
+
+            <div class="loading">
+                <div class="loading-content">
+                    <div class="loading-spinner"></div>
+                    <h2>Analyzing album cover...</h2>
+                    <p>Please wait while we identify the album and artist</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.getElementById('photoInput').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('photo', file);
+
+            // Show loading screen
+            document.querySelector('.loading').style.display = 'block';
+
+            try {
+                // For GitHub Pages, we'll use a mock response since we can't make API calls
+                // In a real deployment, you would use your actual API endpoint
+                setTimeout(() => {
+                    // Hide loading screen
+                    document.querySelector('.loading').style.display = 'none';
+                    
+                    // Show a mock result
+                    document.getElementById('resultSection').style.display = 'block';
+                    document.getElementById('resultText').innerHTML = `
+                        <div class="simple-info">
+                            <div class="info-line"><strong>Album:</strong> Abbey Road</div>
+                            <div class="info-line"><strong>Artist:</strong> The Beatles</div>
+                        </div>
+                    `;
+                    
+                    // Add to history
+                    const historyList = document.getElementById('historyList');
+                    const historyCard = document.createElement('div');
+                    historyCard.className = 'history-card';
+                    historyCard.innerHTML = `
+                        <div class="simple-info">
+                            <div class="info-line"><strong>Album:</strong> Abbey Road</div>
+                            <div class="info-line"><strong>Artist:</strong> The Beatles</div>
+                        </div>
+                    `;
+                    historyList.prepend(historyCard);
+                }, 2000);
+            } catch (error) {
+                // Hide loading screen
+                document.querySelector('.loading').style.display = 'none';
+                console.error('Error uploading photo: ', error);
+                alert('An error occurred while uploading the photo');
+            }
+        });
+    </script>
+</body>
+</html> 
