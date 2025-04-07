@@ -131,7 +131,7 @@ def get_records():
 if __name__ == '__main__':
     # Parse command line arguments
     parser = argparse.ArgumentParser(description='Vinyl Record Scanner')
-    parser.add_argument('--port', type=int, default=5000, help='Port to run the server on')
+    parser.add_argument('--port', type=int, default=int(os.environ.get('PORT', 5000)), help='Port to run the server on')
     parser.add_argument('--host', type=str, default='0.0.0.0', help='Host to run the server on')
     args = parser.parse_args()
     
