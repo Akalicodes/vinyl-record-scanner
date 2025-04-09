@@ -39,6 +39,21 @@ header p {
     font-weight: 500;
 }
 
+.view-all-scans {
+    display: inline-block;
+    margin-top: 1rem;
+    color: #3a2e24;
+    text-decoration: none;
+    font-weight: 500;
+    border-bottom: 1px dashed #3a2e24;
+    transition: all 0.3s ease;
+}
+
+.view-all-scans:hover {
+    color: #6b5a4a;
+    border-bottom-color: #6b5a4a;
+}
+
 .upload-section {
     margin-bottom: 3rem;
 }
@@ -116,6 +131,15 @@ input[type="file"] {
 .info-line strong {
     font-weight: 700;
     color: #3a2e24;
+}
+
+.info-line.timestamp {
+    font-size: 0.9rem;
+    color: #6b5a4a;
+    font-style: italic;
+    margin-top: 0.5rem;
+    border-top: 1px dashed #d8c9b8;
+    padding-top: 0.5rem;
 }
 
 .error-message {

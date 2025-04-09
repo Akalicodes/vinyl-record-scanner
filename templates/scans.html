@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vinyl Record Scanner - All Scans</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        pre {
+            background-color: #f5f0e8;
+            padding: 1.5rem;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: #3a2e24;
+            border: 1px solid #d8c9b8;
+        }
+        
+        .json-container {
+            margin-top: 2rem;
+        }
+        
+        .download-btn {
+            display: inline-block;
+            background-color: #3a2e24;
+            color: #f5f0e8;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: 500;
+            margin-top: 1rem;
+            transition: background-color 0.3s ease;
+        }
+        
+        .download-btn:hover {
+            background-color: #4a3c32;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-top: 2rem;
+            color: #6b5a4a;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Vinyl Record Scanner</h1>
+            <p>All Successful Scans</p>
+        </header>
+
+        <main>
+            <div class="json-container">
+                <h2>JSON Data</h2>
+                <p>This page displays all successful scans in JSON format. You can use this data for integration with other applications.</p>
+                
+                <pre id="jsonData">Loading...</pre>
+                
+                <a href="{{ url_for('static', filename='scans.json') }}" download class="download-btn">Download JSON File</a>
+            </div>
+            
+            <a href="{{ url_for('index') }}" class="back-link">← Back to Scanner</a>
+        </main>
+    </div>
+
+    <script>
+        async function loadScans() {
+            try {
+                const response = await fetch('/scans');
+                const data = await response.json();
+                document.getElementById('jsonData').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                console.error('Error loading scans:', error);
+                document.getElementById('jsonData').textContent = 'Error loading data: ' + error.message;
+            }
+        }
+        
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', loadScans);
+    </script>
+</body>
+</html> 

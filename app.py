@@ -6,6 +6,7 @@ import argparse
 from flask import Flask, request, jsonify, render_template
 from dotenv import load_dotenv
 from datetime import datetime
+import re
 
 # Load environment variables
 load_dotenv()
@@ -20,6 +21,10 @@ app = Flask(__name__)
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/scans-page')
+def scans_page():
+    return render_template('scans.html')
 
 @app.route('/upload', methods=['POST'])
 def upload():
@@ -84,8 +89,12 @@ def upload():
             
             # Only save to history if we have a clear result with both album and artist
             if "Album:" in analysis and "Artist:" in analysis and "unclear" not in analysis.lower():
-                save_to_history(analysis)
-                return jsonify({'success': True, 'info': analysis})
+                save_success = save_to_history(analysis)
+                return jsonify({
+                    'success': True, 
+                    'info': analysis,
+                    'saved': save_success
+                })
             else:
                 return jsonify({
                     'success': False,
@@ -107,15 +116,57 @@ def save_to_history(analysis):
             with open(history_file, 'r') as f:
                 history = json.load(f)
         
-        history.append({
-            'info': analysis,
-            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        })
+        # Extract album and artist from the analysis
+        album_match = re.search(r'Album: (.*?)(?=Artist:|$)', analysis)
+        artist_match = re.search(r'Artist: (.*?)$', analysis)
         
+        album = album_match.group(1).strip() if album_match else "Unknown Album"
+        artist = artist_match.group(1).strip() if artist_match else "Unknown Artist"
+        
+        # Create a scan record with timestamp
+        scan_record = {
+            'album': album,
+            'artist': artist,
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+        
+        # Add to history
+        history.append(scan_record)
+        
+        # Save to file
         with open(history_file, 'w') as f:
-            json.dump(history, f)
-    except Exception:
-        pass
+            json.dump(history, f, indent=2)
+            
+        # Also save to a public JSON file that can be accessed from anywhere
+        public_history_file = 'static/scans.json'
+        with open(public_history_file, 'w') as f:
+            json.dump(history, f, indent=2)
+            
+        return True
+    except Exception as e:
+        print(f"Error saving to history: {str(e)}")
+        return False
+
+@app.route('/scans')
+def get_scans():
+    """Endpoint to get all successful scans"""
+    try:
+        # Try to get from the public JSON file first
+        public_history_file = 'static/scans.json'
+        if os.path.exists(public_history_file):
+            with open(public_history_file, 'r') as f:
+                return jsonify(json.load(f))
+        
+        # Fall back to the data directory file
+        history_file = 'data/history.json'
+        if os.path.exists(history_file):
+            with open(history_file, 'r') as f:
+                return jsonify(json.load(f))
+        
+        return jsonify([])
+    except Exception as e:
+        print(f"Error getting scans: {str(e)}")
+        return jsonify([])
 
 @app.route('/records')
 def get_records():

@@ -48,6 +48,7 @@
         <header>
             <h1>Vinyl Record Scanner</h1>
             <p>Take a photo of any vinyl record cover to identify it</p>
+            <a href="{{ url_for('scans_page') }}" class="view-all-scans">View All Scans</a>
         </header>
 
         <main>
@@ -144,23 +145,17 @@
 
         async function loadHistory() {
             try {
-                const response = await fetch('/records');
+                const response = await fetch('/scans');
                 const records = await response.json();
                 
                 const historyList = document.getElementById('historyList');
                 historyList.innerHTML = records.reverse().map(record => {
-                    const info = record.info;
-                    const albumMatch = info.match(/Album: (.*?)(?=Artist:|$)/);
-                    const artistMatch = info.match(/Artist: (.*?)$/);
-                    
-                    const album = albumMatch ? albumMatch[1].trim() : 'Unknown Album';
-                    const artist = artistMatch ? artistMatch[1].trim() : 'Unknown Artist';
-                    
                     return `
                         <div class="history-card">
                             <div class="simple-info">
-                                <div class="info-line"><strong>Album:</strong> ${album}</div>
-                                <div class="info-line"><strong>Artist:</strong> ${artist}</div>
+                                <div class="info-line"><strong>Album:</strong> ${record.album}</div>
+                                <div class="info-line"><strong>Artist:</strong> ${record.artist}</div>
+                                <div class="info-line timestamp"><strong>Scanned:</strong> ${record.timestamp}</div>
                             </div>
                         </div>
                     `;
